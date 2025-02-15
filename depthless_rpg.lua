@@ -5,7 +5,7 @@
   /_/\_\\__, |\___/ 
         |___/   
 
-Found bugs? https://discord.gg/6YSBMeRSkM
+Found bugs? https://discord.gg/5QtB6CYU77
 ]]
 local player = game.Players.LocalPlayer
 
@@ -124,7 +124,7 @@ local discordLabel = Instance.new("TextLabel")
 discordLabel.Size = UDim2.new(1, -10, 0, 20)
 discordLabel.Position = UDim2.new(0, 5, 1, -25)
 discordLabel.BackgroundTransparency = 1
-discordLabel.Text = "https://discord.gg/6YSBMeRSkM"
+discordLabel.Text = "https://discord.gg/5QtB6CYU77"
 discordLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 discordLabel.Font = Enum.Font.Gotham
 discordLabel.TextSize = 14
