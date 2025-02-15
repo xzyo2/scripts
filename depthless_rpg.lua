@@ -4,6 +4,7 @@
 --   >  <| |_| | (_) |
 --  /_/\_\\__, |\___/ 
 --        |___/       
+-- https://discord.gg/6YSBMeRSkM
 local A0_ = [[<BASE64_ENCODED_CODE>]]
 local function A1_(str)
   local b = 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/'
