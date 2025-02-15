@@ -8,11 +8,18 @@
 Found bugs? https://discord.gg/6YSBMeRSkM
 ]]
 local player = game.Players.LocalPlayer
+
+-- Get the current character and set up respawn handling
 local character = player.Character or player.CharacterAdded:Wait()
 local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
 
+player.CharacterAdded:Connect(function(newCharacter)
+    character = newCharacter
+    humanoidRootPart = newCharacter:WaitForChild("HumanoidRootPart")
+end)
+
 local auraEnabled = false
-local attackRadius = 10
+local attackRadius = 10 -- initial value
 local attackSpeed = "Slow"
 local running = true
 
@@ -22,8 +29,10 @@ local speeds = {
     Fast = 0.05
 }
 
+-- Create GUI and ensure it persists after respawn
 local gui = Instance.new("ScreenGui")
 gui.Name = "KillAuraGUI"
+gui.ResetOnSpawn = false
 gui.Parent = player:WaitForChild("PlayerGui")
 
 local container = Instance.new("Frame")
@@ -63,28 +72,48 @@ watermark.Font = Enum.Font.GothamBold
 watermark.TextSize = 18
 watermark.Parent = container
 
-local radiusButton = Instance.new("TextButton")
-radiusButton.Size = UDim2.new(0, 200, 0, 30)
-radiusButton.Position = UDim2.new(0, 10, 0, 70)
-radiusButton.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
-radiusButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-radiusButton.Font = Enum.Font.Gotham
-radiusButton.TextSize = 14
-radiusButton.Text = "Radius: 10"
-radiusButton.Parent = container
+-- Slider Background (for Radius)
+local radiusSlider = Instance.new("Frame")
+radiusSlider.Size = UDim2.new(0, 200, 0, 20)
+radiusSlider.Position = UDim2.new(0, 10, 0, 70) -- slider below the toggle button
+radiusSlider.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+radiusSlider.BorderSizePixel = 0
+radiusSlider.Parent = container
 
-local radiusCorner = Instance.new("UICorner")
-radiusCorner.CornerRadius = UDim.new(0, 4)
-radiusCorner.Parent = radiusButton
+local radiusSliderCorner = Instance.new("UICorner")
+radiusSliderCorner.CornerRadius = UDim.new(0, 4)
+radiusSliderCorner.Parent = radiusSlider
+
+-- Slider Thumb
+local sliderThumb = Instance.new("Frame")
+sliderThumb.Size = UDim2.new(0, 10, 1, 0)
+sliderThumb.Position = UDim2.new(0, 0, 0, 0)
+sliderThumb.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+sliderThumb.Parent = radiusSlider
+
+local sliderThumbCorner = Instance.new("UICorner")
+sliderThumbCorner.CornerRadius = UDim.new(0, 4)
+sliderThumbCorner.Parent = sliderThumb
+
+-- Radius Label placed BELOW the slider
+local radiusLabel = Instance.new("TextLabel")
+radiusLabel.Size = UDim2.new(0, 200, 0, 20)
+radiusLabel.Position = UDim2.new(0, 10, 0, 95)
+radiusLabel.BackgroundTransparency = 1
+radiusLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+radiusLabel.Font = Enum.Font.Gotham
+radiusLabel.TextSize = 14
+radiusLabel.Text = "Radius: " .. attackRadius
+radiusLabel.Parent = container
 
 local speedButton = Instance.new("TextButton")
 speedButton.Size = UDim2.new(0, 200, 0, 30)
-speedButton.Position = UDim2.new(0, 10, 0, 110)
+speedButton.Position = UDim2.new(0, 10, 0, 120)
 speedButton.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
 speedButton.TextColor3 = Color3.fromRGB(255, 255, 255)
 speedButton.Font = Enum.Font.Gotham
 speedButton.TextSize = 14
-speedButton.Text = "Speed: Slow"
+speedButton.Text = "Speed: " .. attackSpeed
 speedButton.Parent = container
 
 local speedCorner = Instance.new("UICorner")
@@ -106,14 +135,6 @@ toggleButton.MouseButton1Click:Connect(function()
     toggleButton.Text = auraEnabled and "Aura: ON" or "Aura: OFF"
 end)
 
-radiusButton.MouseButton1Click:Connect(function()
-    attackRadius = attackRadius + 5
-    if attackRadius > 150 then
-        attackRadius = 10
-    end
-    radiusButton.Text = "Radius: " .. attackRadius
-end)
-
 speedButton.MouseButton1Click:Connect(function()
     if attackSpeed == "Slow" then
         attackSpeed = "Medium"
@@ -123,6 +144,40 @@ speedButton.MouseButton1Click:Connect(function()
         attackSpeed = "Slow"
     end
     speedButton.Text = "Speed: " .. attackSpeed
+end)
+
+local UserInputService = game:GetService("UserInputService")
+local dragging = false
+
+-- Disable the container's drag when interacting with the slider
+radiusSlider.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = true
+        container.Draggable = false
+    end
+end)
+
+radiusSlider.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        dragging = false
+        container.Draggable = true
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+        local mousePos = UserInputService:GetMouseLocation()
+        local sliderPos = radiusSlider.AbsolutePosition
+        local sliderWidth = radiusSlider.AbsoluteSize.X
+        local relativeX = math.clamp(mousePos.X - sliderPos.X, 0, sliderWidth)
+        -- Center the thumb on the mouse
+        sliderThumb.Position = UDim2.new(0, relativeX - (sliderThumb.AbsoluteSize.X / 2), 0, 0)
+        local percent = relativeX / sliderWidth
+        -- Map the percentage to a range between 10 and 350 studs
+        local newRadius = 10 + (340 * percent)
+        attackRadius = math.floor(newRadius)
+        radiusLabel.Text = "Radius: " .. attackRadius
+    end
 end)
 
 local function getEquippedTool()
