@@ -7,14 +7,17 @@
 Found bugs? https://discord.gg/5QtB6CYU77
 ]]
 local player = game.Players.LocalPlayer
+
+
 local character = player.Character or player.CharacterAdded:Wait()
 local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
 player.CharacterAdded:Connect(function(newCharacter)
     character = newCharacter
     humanoidRootPart = newCharacter:WaitForChild("HumanoidRootPart")
 end)
+
 local auraEnabled = false
-local attackRadius = 10 -- initial value
+local attackRadius = 10 
 local attackSpeed = "Slow"
 local running = true
 local speeds = {
@@ -23,10 +26,12 @@ local speeds = {
     Fast = 0.02
 }
 
+
 local gui = Instance.new("ScreenGui")
 gui.Name = "KillAuraGUI"
 gui.ResetOnSpawn = false
 gui.Parent = player:WaitForChild("PlayerGui")
+
 local container = Instance.new("Frame")
 container.Size = UDim2.new(0, 220, 0, 170)
 container.Position = UDim2.new(0, 10, 0, 10)
@@ -35,9 +40,11 @@ container.BorderSizePixel = 0
 container.Active = true
 container.Draggable = true
 container.Parent = gui
+
 local containerCorner = Instance.new("UICorner")
 containerCorner.CornerRadius = UDim.new(0, 8)
 containerCorner.Parent = container
+
 local toggleButton = Instance.new("TextButton")
 toggleButton.Size = UDim2.new(0, 120, 0, 50)
 toggleButton.Position = UDim2.new(0, 10, 0, 10)
@@ -47,9 +54,11 @@ toggleButton.Font = Enum.Font.Gotham
 toggleButton.TextSize = 14
 toggleButton.Text = "Aura: OFF"
 toggleButton.Parent = container
+
 local toggleCorner = Instance.new("UICorner")
 toggleCorner.CornerRadius = UDim.new(0, 4)
 toggleCorner.Parent = toggleButton
+
 local watermark = Instance.new("TextLabel")
 watermark.Size = UDim2.new(0, 80, 0, 50)
 watermark.Position = UDim2.new(0, 140, 0, 10)
@@ -66,19 +75,23 @@ radiusSlider.Position = UDim2.new(0, 10, 0, 70)
 radiusSlider.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
 radiusSlider.BorderSizePixel = 0
 radiusSlider.Parent = container
+
 local radiusSliderCorner = Instance.new("UICorner")
 radiusSliderCorner.CornerRadius = UDim.new(0, 4)
 radiusSliderCorner.Parent = radiusSlider
--- Slider Thumb
+
+
 local sliderThumb = Instance.new("Frame")
 sliderThumb.Size = UDim2.new(0, 10, 1, 0)
 sliderThumb.Position = UDim2.new(0, 0, 0, 0)
 sliderThumb.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 sliderThumb.Parent = radiusSlider
+
 local sliderThumbCorner = Instance.new("UICorner")
 sliderThumbCorner.CornerRadius = UDim.new(0, 4)
 sliderThumbCorner.Parent = sliderThumb
--- Radius Label placed BELOW the slider
+
+
 local radiusLabel = Instance.new("TextLabel")
 radiusLabel.Size = UDim2.new(0, 200, 0, 20)
 radiusLabel.Position = UDim2.new(0, 10, 0, 95)
@@ -88,6 +101,7 @@ radiusLabel.Font = Enum.Font.Gotham
 radiusLabel.TextSize = 14
 radiusLabel.Text = "Radius: " .. attackRadius
 radiusLabel.Parent = container
+
 local speedButton = Instance.new("TextButton")
 speedButton.Size = UDim2.new(0, 200, 0, 30)
 speedButton.Position = UDim2.new(0, 10, 0, 120)
@@ -97,9 +111,11 @@ speedButton.Font = Enum.Font.Gotham
 speedButton.TextSize = 14
 speedButton.Text = "Speed: " .. attackSpeed
 speedButton.Parent = container
+
 local speedCorner = Instance.new("UICorner")
 speedCorner.CornerRadius = UDim.new(0, 4)
 speedCorner.Parent = speedButton
+
 local discordLabel = Instance.new("TextLabel")
 discordLabel.Size = UDim2.new(1, -10, 0, 20)
 discordLabel.Position = UDim2.new(0, 5, 1, -25)
@@ -109,10 +125,14 @@ discordLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
 discordLabel.Font = Enum.Font.Gotham
 discordLabel.TextSize = 14
 discordLabel.Parent = container
+
+
 toggleButton.MouseButton1Click:Connect(function()
     auraEnabled = not auraEnabled
     toggleButton.Text = auraEnabled and "Aura: ON" or "Aura: OFF"
 end)
+
+
 speedButton.MouseButton1Click:Connect(function()
     if attackSpeed == "Slow" then
         attackSpeed = "Medium"
@@ -123,6 +143,8 @@ speedButton.MouseButton1Click:Connect(function()
     end
     speedButton.Text = "Speed: " .. attackSpeed
 end)
+
+-- Slider Logic
 local UserInputService = game:GetService("UserInputService")
 local dragging = false
 
@@ -132,27 +154,29 @@ radiusSlider.InputBegan:Connect(function(input)
         container.Draggable = false
     end
 end)
+
 radiusSlider.InputEnded:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
         dragging = false
         container.Draggable = true
     end
 end)
+
 UserInputService.InputChanged:Connect(function(input)
     if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
         local mousePos = UserInputService:GetMouseLocation()
         local sliderPos = radiusSlider.AbsolutePosition
         local sliderWidth = radiusSlider.AbsoluteSize.X
         local relativeX = math.clamp(mousePos.X - sliderPos.X, 0, sliderWidth)
-        -- Center the thumb on the mouse
         sliderThumb.Position = UDim2.new(0, relativeX - (sliderThumb.AbsoluteSize.X / 2), 0, 0)
         local percent = relativeX / sliderWidth
-        -- Map the percentage to a range between 10 and 350 studs
         local newRadius = 10 + (800 * percent)
         attackRadius = math.floor(newRadius)
         radiusLabel.Text = "Radius: " .. attackRadius
     end
 end)
+
+
 local function getEquippedTool()
     local char = player.Character
     if not char then return nil end
@@ -164,19 +188,42 @@ local function getEquippedTool()
     return nil
 end
 
+
+local cachedMobs = {}
+local lastMobUpdate = tick()
+
+
+local function updateCachedMobs()
+    cachedMobs = workspace.Mobs:GetChildren()
+    lastMobUpdate = tick()
+end
+
+
+local mobDebounce = {}
+
+
 while running do
     task.wait(speeds[attackSpeed]) 
+
+
+    if tick() - lastMobUpdate >= 1 then
+        updateCachedMobs()
+    end
+
     if auraEnabled and player.Character and humanoidRootPart then
         local equippedTool = getEquippedTool()
         if equippedTool then
-            local mobs = workspace.Mobs:GetChildren() -- Cache mobs list
-            for _, mob in ipairs(mobs) do
+            for _, mob in ipairs(cachedMobs) do
                 local mobRoot = mob:FindFirstChild("HumanoidRootPart")
                 if mobRoot then
                     local distance = (mobRoot.Position - humanoidRootPart.Position).Magnitude
                     if distance <= attackRadius then
-                        game:GetService("ReplicatedStorage").Remotes.DamageMob:FireServer(mob, 22, equippedTool.Name)
-                        game:GetService("ReplicatedStorage").Remotes.PlayerDamagedMob:FireServer(mob, 22, equippedTool.Name)
+                        -- Check debounce to avoid spamming
+                        if not mobDebounce[mob] or tick() - mobDebounce[mob] > speeds[attackSpeed] then
+                            game:GetService("ReplicatedStorage").Remotes.DamageMob:FireServer(mob, 22, equippedTool.Name)
+                            game:GetService("ReplicatedStorage").Remotes.PlayerDamagedMob:FireServer(mob, 22, equippedTool.Name)
+                            mobDebounce[mob] = tick() -- Update debounce timer
+                        end
                     end
                 end
             end
