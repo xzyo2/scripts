@@ -26,7 +26,7 @@ local running = true
 local speeds = {
     Slow = 0.5,
     Medium = 0.3,
-    Fast = 0.05
+    Fast = 0.02
 }
 
 -- Create GUI and ensure it persists after respawn
@@ -174,7 +174,7 @@ UserInputService.InputChanged:Connect(function(input)
         sliderThumb.Position = UDim2.new(0, relativeX - (sliderThumb.AbsoluteSize.X / 2), 0, 0)
         local percent = relativeX / sliderWidth
         -- Map the percentage to a range between 10 and 350 studs
-        local newRadius = 10 + (340 * percent)
+        local newRadius = 10 + (800 * percent)
         attackRadius = math.floor(newRadius)
         radiusLabel.Text = "Radius: " .. attackRadius
     end
