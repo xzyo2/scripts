@@ -8,12 +8,14 @@ Found bugs? https://discord.gg/5QtB6CYU77
 ]]
 local player = game.Players.LocalPlayer
 
-
 local character = player.Character or player.CharacterAdded:Wait()
 local humanoidRootPart = character:WaitForChild("HumanoidRootPart")
+local humanoid = character:WaitForChild("Humanoid")
 player.CharacterAdded:Connect(function(newCharacter)
     character = newCharacter
     humanoidRootPart = newCharacter:WaitForChild("HumanoidRootPart")
+    humanoid = newCharacter:WaitForChild("Humanoid")
+    humanoid.WalkSpeed = stealthSpeedEnabled and stealthSpeedValue or defaultWalkSpeed
 end)
 
 local auraEnabled = false
@@ -26,14 +28,20 @@ local speeds = {
     Fast = 0.02
 }
 
+-- WalkSpeed values
+local defaultWalkSpeed = 16
+local stealthSpeedValue = 50 -- default stealth value (modifiable via slider)
+local stealthSpeedEnabled = false
 
+-- GUI Setup
 local gui = Instance.new("ScreenGui")
 gui.Name = "KillAuraGUI"
 gui.ResetOnSpawn = false
 gui.Parent = player:WaitForChild("PlayerGui")
 
+-- Increase container height to accommodate new controls
 local container = Instance.new("Frame")
-container.Size = UDim2.new(0, 220, 0, 170)
+container.Size = UDim2.new(0, 220, 0, 450)
 container.Position = UDim2.new(0, 10, 0, 10)
 container.BackgroundColor3 = Color3.fromRGB(45, 45, 45)
 container.BorderSizePixel = 0
@@ -69,6 +77,7 @@ watermark.Font = Enum.Font.GothamBold
 watermark.TextSize = 18
 watermark.Parent = container
 
+-- Radius Slider (for aura)
 local radiusSlider = Instance.new("Frame")
 radiusSlider.Size = UDim2.new(0, 200, 0, 20)
 radiusSlider.Position = UDim2.new(0, 10, 0, 70) 
@@ -80,7 +89,6 @@ local radiusSliderCorner = Instance.new("UICorner")
 radiusSliderCorner.CornerRadius = UDim.new(0, 4)
 radiusSliderCorner.Parent = radiusSlider
 
-
 local sliderThumb = Instance.new("Frame")
 sliderThumb.Size = UDim2.new(0, 10, 1, 0)
 sliderThumb.Position = UDim2.new(0, 0, 0, 0)
@@ -90,7 +98,6 @@ sliderThumb.Parent = radiusSlider
 local sliderThumbCorner = Instance.new("UICorner")
 sliderThumbCorner.CornerRadius = UDim.new(0, 4)
 sliderThumbCorner.Parent = sliderThumb
-
 
 local radiusLabel = Instance.new("TextLabel")
 radiusLabel.Size = UDim2.new(0, 200, 0, 20)
@@ -102,6 +109,7 @@ radiusLabel.TextSize = 14
 radiusLabel.Text = "Radius: " .. attackRadius
 radiusLabel.Parent = container
 
+-- Attack Speed Button
 local speedButton = Instance.new("TextButton")
 speedButton.Size = UDim2.new(0, 200, 0, 30)
 speedButton.Position = UDim2.new(0, 10, 0, 120)
@@ -116,6 +124,98 @@ local speedCorner = Instance.new("UICorner")
 speedCorner.CornerRadius = UDim.new(0, 4)
 speedCorner.Parent = speedButton
 
+-- Stealth WalkSpeed Toggle Button
+local stealthSpeedButton = Instance.new("TextButton")
+stealthSpeedButton.Size = UDim2.new(0, 200, 0, 30)
+stealthSpeedButton.Position = UDim2.new(0, 10, 0, 160)
+stealthSpeedButton.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+stealthSpeedButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+stealthSpeedButton.Font = Enum.Font.Gotham
+stealthSpeedButton.TextSize = 14
+stealthSpeedButton.Text = "Stealth Speed: OFF"
+stealthSpeedButton.Parent = container
+
+local stealthSpeedCorner = Instance.new("UICorner")
+stealthSpeedCorner.CornerRadius = UDim.new(0, 4)
+stealthSpeedCorner.Parent = stealthSpeedButton
+
+-- WalkSpeed Slider (for adjusting stealthSpeedValue)
+local walkSpeedSlider = Instance.new("Frame")
+walkSpeedSlider.Size = UDim2.new(0, 200, 0, 20)
+walkSpeedSlider.Position = UDim2.new(0, 10, 0, 200)
+walkSpeedSlider.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+walkSpeedSlider.BorderSizePixel = 0
+walkSpeedSlider.Parent = container
+
+local walkSpeedSliderCorner = Instance.new("UICorner")
+walkSpeedSliderCorner.CornerRadius = UDim.new(0, 4)
+walkSpeedSliderCorner.Parent = walkSpeedSlider
+
+local walkSpeedThumb = Instance.new("Frame")
+walkSpeedThumb.Size = UDim2.new(0, 10, 1, 0)
+walkSpeedThumb.Position = UDim2.new(0, 0, 0, 0)
+walkSpeedThumb.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+walkSpeedThumb.Parent = walkSpeedSlider
+
+local walkSpeedThumbCorner = Instance.new("UICorner")
+walkSpeedThumbCorner.CornerRadius = UDim.new(0, 4)
+walkSpeedThumbCorner.Parent = walkSpeedThumb
+
+local walkSpeedLabel = Instance.new("TextLabel")
+walkSpeedLabel.Size = UDim2.new(0, 200, 0, 20)
+walkSpeedLabel.Position = UDim2.new(0, 10, 0, 225)
+walkSpeedLabel.BackgroundTransparency = 1
+walkSpeedLabel.TextColor3 = Color3.fromRGB(255, 255, 255)
+walkSpeedLabel.Font = Enum.Font.Gotham
+walkSpeedLabel.TextSize = 14
+walkSpeedLabel.Text = "WalkSpeed: " .. stealthSpeedValue
+walkSpeedLabel.Parent = container
+
+-- Teleport Toggle Button
+local tpToggleButton = Instance.new("TextButton")
+tpToggleButton.Size = UDim2.new(0, 200, 0, 30)
+tpToggleButton.Position = UDim2.new(0, 10, 0, 260)
+tpToggleButton.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+tpToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+tpToggleButton.Font = Enum.Font.Gotham
+tpToggleButton.TextSize = 14
+tpToggleButton.Text = "Teleport"
+tpToggleButton.Parent = container
+
+local tpToggleCorner = Instance.new("UICorner")
+tpToggleCorner.CornerRadius = UDim.new(0, 4)
+tpToggleCorner.Parent = tpToggleButton
+
+-- Teleport Search Box (for filtering TP parts)
+local tpSearchBox = Instance.new("TextBox")
+tpSearchBox.Size = UDim2.new(0, 200, 0, 25)
+tpSearchBox.Position = UDim2.new(0, 10, 0, 300)
+tpSearchBox.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
+tpSearchBox.TextColor3 = Color3.fromRGB(255, 255, 255)
+tpSearchBox.Font = Enum.Font.Gotham
+tpSearchBox.TextSize = 14
+tpSearchBox.PlaceholderText = "Search Teleport"
+tpSearchBox.ClearTextOnFocus = false
+tpSearchBox.Parent = container
+tpSearchBox.Visible = false
+
+-- Teleport ScrollingFrame (for the TP parts list)
+local tpFrame = Instance.new("ScrollingFrame")
+tpFrame.Size = UDim2.new(0, 200, 0, 100)
+tpFrame.Position = UDim2.new(0, 10, 0, 330)
+tpFrame.BackgroundColor3 = Color3.fromRGB(60, 60, 60)
+tpFrame.BorderSizePixel = 0
+tpFrame.CanvasSize = UDim2.new(0, 0, 0, 0)
+tpFrame.ScrollBarThickness = 6
+tpFrame.Visible = false
+tpFrame.Parent = container
+
+local tpList = Instance.new("UIListLayout")
+tpList.FillDirection = Enum.FillDirection.Vertical
+tpList.SortOrder = Enum.SortOrder.LayoutOrder
+tpList.Padding = UDim.new(0, 4)
+tpList.Parent = tpFrame
+
 local discordLabel = Instance.new("TextLabel")
 discordLabel.Size = UDim2.new(1, -10, 0, 20)
 discordLabel.Position = UDim2.new(0, 5, 1, -25)
@@ -126,7 +226,79 @@ discordLabel.Font = Enum.Font.Gotham
 discordLabel.TextSize = 14
 discordLabel.Parent = container
 
+--------------------------------------------------
+-- TELEPORT LOGIC
+--------------------------------------------------
 
+-- Function to update teleport list based on filter text (always reads from Workspace.TP)
+local function updateTPList(filter)
+    filter = filter or ""
+    local tpFolder = game.Workspace:FindFirstChild("TP")
+    if not tpFolder then return end
+    local allParts = tpFolder:GetChildren()
+    -- Remove existing teleport buttons
+    for _, child in ipairs(tpFrame:GetChildren()) do
+        if child:IsA("TextButton") then
+            child:Destroy()
+        end
+    end
+    for _, tpPart in ipairs(allParts) do
+        if tpPart:IsA("BasePart") and string.find(string.lower(tpPart.Name), string.lower(filter)) then
+            local tpButton = Instance.new("TextButton")
+            tpButton.Size = UDim2.new(1, 0, 0, 30)
+            tpButton.BackgroundColor3 = Color3.fromRGB(90, 90, 90)
+            tpButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+            tpButton.Font = Enum.Font.Gotham
+            tpButton.TextSize = 14
+            tpButton.Text = tpPart.Name
+            tpButton.Parent = tpFrame
+            
+            tpButton.MouseButton1Click:Connect(function()
+                if character and humanoidRootPart then
+                    humanoidRootPart.CFrame = tpPart.CFrame + Vector3.new(0, 3, 0)
+                end
+                tpFrame.Visible = false
+                tpSearchBox.Visible = false
+            end)
+        end
+    end
+    task.wait() -- allow UIListLayout to update
+    local totalHeight = tpList.AbsoluteContentSize.Y
+    tpFrame.CanvasSize = UDim2.new(0, 0, 0, totalHeight)
+end
+
+-- Update teleport list when search text changes
+tpSearchBox:GetPropertyChangedSignal("Text"):Connect(function()
+    updateTPList(tpSearchBox.Text)
+end)
+
+tpToggleButton.MouseButton1Click:Connect(function()
+    local newVisibility = not tpFrame.Visible
+    tpFrame.Visible = newVisibility
+    tpSearchBox.Visible = newVisibility
+    if newVisibility then
+        tpSearchBox.Text = ""
+        updateTPList("")
+    end
+end)
+
+
+local tpFolder = game.Workspace:FindFirstChild("TP")
+if tpFolder then
+    tpFolder.ChildAdded:Connect(function(child)
+        if tpFrame.Visible then
+            updateTPList(tpSearchBox.Text)
+        end
+    end)
+    tpFolder.ChildRemoved:Connect(function(child)
+        if tpFrame.Visible then
+            updateTPList(tpSearchBox.Text)
+        end
+    end)
+end
+
+
+-- Toggle Aura
 toggleButton.MouseButton1Click:Connect(function()
     auraEnabled = not auraEnabled
     toggleButton.Text = auraEnabled and "Aura: ON" or "Aura: OFF"
@@ -144,26 +316,34 @@ speedButton.MouseButton1Click:Connect(function()
     speedButton.Text = "Speed: " .. attackSpeed
 end)
 
--- Slider Logic
+stealthSpeedButton.MouseButton1Click:Connect(function()
+    stealthSpeedEnabled = not stealthSpeedEnabled
+    stealthSpeedButton.Text = stealthSpeedEnabled and ("Stealth Speed: ON") or "Stealth Speed: OFF"
+    if character and humanoid then
+        humanoid.WalkSpeed = stealthSpeedEnabled and stealthSpeedValue or defaultWalkSpeed
+    end
+end)
+
+
 local UserInputService = game:GetService("UserInputService")
-local dragging = false
+local draggingRadius = false
 
 radiusSlider.InputBegan:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = true
+        draggingRadius = true
         container.Draggable = false
     end
 end)
 
 radiusSlider.InputEnded:Connect(function(input)
     if input.UserInputType == Enum.UserInputType.MouseButton1 then
-        dragging = false
+        draggingRadius = false
         container.Draggable = true
     end
 end)
 
 UserInputService.InputChanged:Connect(function(input)
-    if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+    if draggingRadius and input.UserInputType == Enum.UserInputType.MouseMovement then
         local mousePos = UserInputService:GetMouseLocation()
         local sliderPos = radiusSlider.AbsolutePosition
         local sliderWidth = radiusSlider.AbsoluteSize.X
@@ -173,6 +353,41 @@ UserInputService.InputChanged:Connect(function(input)
         local newRadius = 10 + (800 * percent)
         attackRadius = math.floor(newRadius)
         radiusLabel.Text = "Radius: " .. attackRadius
+    end
+end)
+
+local draggingWalkSpeed = false
+local walkSpeedMin = 16
+local walkSpeedMax = 200
+
+walkSpeedSlider.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        draggingWalkSpeed = true
+        container.Draggable = false
+    end
+end)
+
+walkSpeedSlider.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 then
+        draggingWalkSpeed = false
+        container.Draggable = true
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if draggingWalkSpeed and input.UserInputType == Enum.UserInputType.MouseMovement then
+        local mousePos = UserInputService:GetMouseLocation()
+        local sliderPos = walkSpeedSlider.AbsolutePosition
+        local sliderWidth = walkSpeedSlider.AbsoluteSize.X
+        local relativeX = math.clamp(mousePos.X - sliderPos.X, 0, sliderWidth)
+        walkSpeedThumb.Position = UDim2.new(0, relativeX - (walkSpeedThumb.AbsoluteSize.X / 2), 0, 0)
+        local percent = relativeX / sliderWidth
+        local newWalkSpeed = math.floor(walkSpeedMin + ((walkSpeedMax - walkSpeedMin) * percent))
+        stealthSpeedValue = newWalkSpeed
+        walkSpeedLabel.Text = "WalkSpeed: " .. newWalkSpeed
+        if stealthSpeedEnabled and humanoid then
+            humanoid.WalkSpeed = newWalkSpeed
+        end
     end
 end)
 
@@ -188,29 +403,35 @@ local function getEquippedTool()
     return nil
 end
 
-
 local cachedMobs = {}
 local lastMobUpdate = tick()
-
 
 local function updateCachedMobs()
     cachedMobs = workspace.Mobs:GetChildren()
     lastMobUpdate = tick()
 end
 
-
 local mobDebounce = {}
+
+spawn(function()
+    while task.wait() do
+        if stealthSpeedEnabled and character and humanoid then
+            pcall(function()
+                humanoid.WalkSpeed = stealthSpeedValue
+            end)
+        end
+    end
+end)
 
 
 while running do
     task.wait(speeds[attackSpeed]) 
 
-
     if tick() - lastMobUpdate >= 1 then
         updateCachedMobs()
     end
 
-    if auraEnabled and player.Character and humanoidRootPart then
+    if auraEnabled and character and humanoidRootPart then
         local equippedTool = getEquippedTool()
         if equippedTool then
             for _, mob in ipairs(cachedMobs) do
@@ -218,11 +439,10 @@ while running do
                 if mobRoot then
                     local distance = (mobRoot.Position - humanoidRootPart.Position).Magnitude
                     if distance <= attackRadius then
-                        -- Check debounce to avoid spamming
                         if not mobDebounce[mob] or tick() - mobDebounce[mob] > speeds[attackSpeed] then
                             game:GetService("ReplicatedStorage").Remotes.DamageMob:FireServer(mob, 22, equippedTool.Name)
                             game:GetService("ReplicatedStorage").Remotes.PlayerDamagedMob:FireServer(mob, 22, equippedTool.Name)
-                            mobDebounce[mob] = tick() -- Update debounce timer
+                            mobDebounce[mob] = tick()
                         end
                     end
                 end
