@@ -28,18 +28,15 @@ local speeds = {
     Fast = 0.02
 }
 
--- WalkSpeed values
 local defaultWalkSpeed = 16
-local stealthSpeedValue = 50 -- default stealth value (modifiable via slider)
+local stealthSpeedValue = 50
 local stealthSpeedEnabled = false
 
--- GUI Setup
 local gui = Instance.new("ScreenGui")
 gui.Name = "KillAuraGUI"
 gui.ResetOnSpawn = false
 gui.Parent = player:WaitForChild("PlayerGui")
 
--- Increase container height to accommodate new controls
 local container = Instance.new("Frame")
 container.Size = UDim2.new(0, 220, 0, 450)
 container.Position = UDim2.new(0, 10, 0, 10)
@@ -77,10 +74,9 @@ watermark.Font = Enum.Font.GothamBold
 watermark.TextSize = 18
 watermark.Parent = container
 
--- Radius Slider (for aura)
 local radiusSlider = Instance.new("Frame")
 radiusSlider.Size = UDim2.new(0, 200, 0, 20)
-radiusSlider.Position = UDim2.new(0, 10, 0, 70) 
+radiusSlider.Position = UDim2.new(0, 10, 0, 70)
 radiusSlider.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
 radiusSlider.BorderSizePixel = 0
 radiusSlider.Parent = container
@@ -109,7 +105,6 @@ radiusLabel.TextSize = 14
 radiusLabel.Text = "Radius: " .. attackRadius
 radiusLabel.Parent = container
 
--- Attack Speed Button
 local speedButton = Instance.new("TextButton")
 speedButton.Size = UDim2.new(0, 200, 0, 30)
 speedButton.Position = UDim2.new(0, 10, 0, 120)
@@ -124,7 +119,6 @@ local speedCorner = Instance.new("UICorner")
 speedCorner.CornerRadius = UDim.new(0, 4)
 speedCorner.Parent = speedButton
 
--- Stealth WalkSpeed Toggle Button
 local stealthSpeedButton = Instance.new("TextButton")
 stealthSpeedButton.Size = UDim2.new(0, 200, 0, 30)
 stealthSpeedButton.Position = UDim2.new(0, 10, 0, 160)
@@ -139,7 +133,6 @@ local stealthSpeedCorner = Instance.new("UICorner")
 stealthSpeedCorner.CornerRadius = UDim.new(0, 4)
 stealthSpeedCorner.Parent = stealthSpeedButton
 
--- WalkSpeed Slider (for adjusting stealthSpeedValue)
 local walkSpeedSlider = Instance.new("Frame")
 walkSpeedSlider.Size = UDim2.new(0, 200, 0, 20)
 walkSpeedSlider.Position = UDim2.new(0, 10, 0, 200)
@@ -171,7 +164,6 @@ walkSpeedLabel.TextSize = 14
 walkSpeedLabel.Text = "WalkSpeed: " .. stealthSpeedValue
 walkSpeedLabel.Parent = container
 
--- Teleport Toggle Button
 local tpToggleButton = Instance.new("TextButton")
 tpToggleButton.Size = UDim2.new(0, 200, 0, 30)
 tpToggleButton.Position = UDim2.new(0, 10, 0, 260)
@@ -186,7 +178,6 @@ local tpToggleCorner = Instance.new("UICorner")
 tpToggleCorner.CornerRadius = UDim.new(0, 4)
 tpToggleCorner.Parent = tpToggleButton
 
--- Teleport Search Box (for filtering TP parts)
 local tpSearchBox = Instance.new("TextBox")
 tpSearchBox.Size = UDim2.new(0, 200, 0, 25)
 tpSearchBox.Position = UDim2.new(0, 10, 0, 300)
@@ -194,12 +185,11 @@ tpSearchBox.BackgroundColor3 = Color3.fromRGB(80, 80, 80)
 tpSearchBox.TextColor3 = Color3.fromRGB(255, 255, 255)
 tpSearchBox.Font = Enum.Font.Gotham
 tpSearchBox.TextSize = 14
-tpSearchBox.PlaceholderText = "Search Teleport"
+tpSearchBox.PlaceholderText = "Search Player"
 tpSearchBox.ClearTextOnFocus = false
 tpSearchBox.Parent = container
 tpSearchBox.Visible = false
 
--- Teleport ScrollingFrame (for the TP parts list)
 local tpFrame = Instance.new("ScrollingFrame")
 tpFrame.Size = UDim2.new(0, 200, 0, 100)
 tpFrame.Position = UDim2.new(0, 10, 0, 330)
@@ -227,49 +217,45 @@ discordLabel.TextSize = 14
 discordLabel.Parent = container
 
 --------------------------------------------------
--- TELEPORT LOGIC
+-- PLAYER TELEPORT LOGIC
 --------------------------------------------------
-
--- Function to update teleport list based on filter text (always reads from Workspace.TP)
-local function updateTPList(filter)
+local function updatePlayerList(filter)
     filter = filter or ""
-    local tpFolder = game.Workspace:FindFirstChild("TP")
-    if not tpFolder then return end
-    local allParts = tpFolder:GetChildren()
-    -- Remove existing teleport buttons
     for _, child in ipairs(tpFrame:GetChildren()) do
         if child:IsA("TextButton") then
             child:Destroy()
         end
     end
-    for _, tpPart in ipairs(allParts) do
-        if tpPart:IsA("BasePart") and string.find(string.lower(tpPart.Name), string.lower(filter)) then
-            local tpButton = Instance.new("TextButton")
-            tpButton.Size = UDim2.new(1, 0, 0, 30)
-            tpButton.BackgroundColor3 = Color3.fromRGB(90, 90, 90)
-            tpButton.TextColor3 = Color3.fromRGB(255, 255, 255)
-            tpButton.Font = Enum.Font.Gotham
-            tpButton.TextSize = 14
-            tpButton.Text = tpPart.Name
-            tpButton.Parent = tpFrame
+    for _, plr in ipairs(game.Players:GetPlayers()) do
+        if plr ~= player and string.find(string.lower(plr.Name), string.lower(filter)) then
+            local plrButton = Instance.new("TextButton")
+            plrButton.Size = UDim2.new(1, 0, 0, 30)
+            plrButton.BackgroundColor3 = Color3.fromRGB(90, 90, 90)
+            plrButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+            plrButton.Font = Enum.Font.Gotham
+            plrButton.TextSize = 14
+            plrButton.Text = plr.Name
+            plrButton.Parent = tpFrame
             
-            tpButton.MouseButton1Click:Connect(function()
-                if character and humanoidRootPart then
-                    humanoidRootPart.CFrame = tpPart.CFrame + Vector3.new(0, 3, 0)
+            plrButton.MouseButton1Click:Connect(function()
+                if plr.Character and plr.Character:FindFirstChild("HumanoidRootPart") then
+                    local targetHRP = plr.Character.HumanoidRootPart
+                    local offset = targetHRP.CFrame.LookVector * -5
+                    local targetPos = targetHRP.Position
+                    humanoidRootPart.CFrame = CFrame.new(targetPos + offset + Vector3.new(0, 3, 0))
                 end
                 tpFrame.Visible = false
                 tpSearchBox.Visible = false
             end)
         end
     end
-    task.wait() -- allow UIListLayout to update
+    task.wait()
     local totalHeight = tpList.AbsoluteContentSize.Y
     tpFrame.CanvasSize = UDim2.new(0, 0, 0, totalHeight)
 end
 
--- Update teleport list when search text changes
 tpSearchBox:GetPropertyChangedSignal("Text"):Connect(function()
-    updateTPList(tpSearchBox.Text)
+    updatePlayerList(tpSearchBox.Text)
 end)
 
 tpToggleButton.MouseButton1Click:Connect(function()
@@ -278,32 +264,28 @@ tpToggleButton.MouseButton1Click:Connect(function()
     tpSearchBox.Visible = newVisibility
     if newVisibility then
         tpSearchBox.Text = ""
-        updateTPList("")
+        updatePlayerList("")
     end
 end)
 
+game.Players.PlayerAdded:Connect(function()
+    if tpFrame.Visible then
+        updatePlayerList(tpSearchBox.Text)
+    end
+end)
+game.Players.PlayerRemoving:Connect(function()
+    if tpFrame.Visible then
+        updatePlayerList(tpSearchBox.Text)
+    end
+end)
+--------------------------------------------------
+-- END PLAYER TELEPORT LOGIC
+--------------------------------------------------
 
-local tpFolder = game.Workspace:FindFirstChild("TP")
-if tpFolder then
-    tpFolder.ChildAdded:Connect(function(child)
-        if tpFrame.Visible then
-            updateTPList(tpSearchBox.Text)
-        end
-    end)
-    tpFolder.ChildRemoved:Connect(function(child)
-        if tpFrame.Visible then
-            updateTPList(tpSearchBox.Text)
-        end
-    end)
-end
-
-
--- Toggle Aura
 toggleButton.MouseButton1Click:Connect(function()
     auraEnabled = not auraEnabled
     toggleButton.Text = auraEnabled and "Aura: ON" or "Aura: OFF"
 end)
-
 
 speedButton.MouseButton1Click:Connect(function()
     if attackSpeed == "Slow" then
@@ -318,12 +300,11 @@ end)
 
 stealthSpeedButton.MouseButton1Click:Connect(function()
     stealthSpeedEnabled = not stealthSpeedEnabled
-    stealthSpeedButton.Text = stealthSpeedEnabled and ("Stealth Speed: ON") or "Stealth Speed: OFF"
+    stealthSpeedButton.Text = stealthSpeedEnabled and "Stealth Speed: ON" or "Stealth Speed: OFF"
     if character and humanoid then
         humanoid.WalkSpeed = stealthSpeedEnabled and stealthSpeedValue or defaultWalkSpeed
     end
 end)
-
 
 local UserInputService = game:GetService("UserInputService")
 local draggingRadius = false
@@ -391,7 +372,6 @@ UserInputService.InputChanged:Connect(function(input)
     end
 end)
 
-
 local function getEquippedTool()
     local char = player.Character
     if not char then return nil end
@@ -423,14 +403,11 @@ spawn(function()
     end
 end)
 
-
 while running do
-    task.wait(speeds[attackSpeed]) 
-
+    task.wait(speeds[attackSpeed])
     if tick() - lastMobUpdate >= 1 then
         updateCachedMobs()
     end
-
     if auraEnabled and character and humanoidRootPart then
         local equippedTool = getEquippedTool()
         if equippedTool then
